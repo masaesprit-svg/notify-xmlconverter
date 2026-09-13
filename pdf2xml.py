@@ -91,6 +91,10 @@ SCHEMA_DESCRIPTION = """
       <subtitle>ア　対象範囲</subtitle>
       <content>内容テキスト</content>
       <content>内容テキスト</content>
+      <table>
+        <row><cell>見出し1</cell><cell>見出し2</cell></row>
+        <row><cell>値1</cell><cell>値2</cell></row>
+      </table>
     </section>
   </body>
 </notification>
@@ -144,6 +148,38 @@ SCHEMA_DESCRIPTION = """
 - 接頭辞の種類（第一/一/1/(1)/ア等）でlevelを決めつけない
 - 同じ接頭辞でも文脈によりlevelが異なる場合がある
 
+## 表のルール
+
+原文に表がある場合は<table>タグで出力してください。
+
+```xml
+<table>
+  <row>
+    <cell>製造番号</cell>
+    <cell>印字されている使用期限</cell>
+    <cell>使用して差しつかえない期限</cell>
+  </row>
+  <row>
+    <cell>0159</cell>
+    <cell>2029/2</cell>
+    <cell>2032/2</cell>
+  </row>
+</table>
+```
+
+- <table>は<section>の中、<content>の後に置く
+- 1行を1つの<row>、1マスを1つの<cell>にする
+- **すべての行で<cell>の数を揃えること**（これを守らないと表が崩れる）
+- 見出し行も通常の<row>として出力する（特別な指定は不要）
+- 空のマスは<cell></cell>と書く（省略しない）
+- セルの中で改行されている場合は、改行を除いて1つの文につなげる
+- 表の行数が多くても、**すべての行を省略せず出力すること**
+- 罫線の太さ、セルの幅、背景色などの体裁は出力しない
+  （これらは変換時に自動で付与される）
+
+セルが縦または横に結合されている場合は、結合を無視して
+それぞれのマスに同じ内容を入れるか、空欄にしてください。
+
 
 """
 
@@ -178,7 +214,8 @@ def repair_ampersands(xml_text):
 # 閉じタグの修復対象にするタグ
 # これ以外は触らない（誤修正を避けるため）
 REPAIRABLE_TAGS = ("subtitle", "content", "paragraph", "notificationtitle",
-                   "date", "department", "recipient", "source", "marker")
+                   "date", "department", "recipient", "source", "marker",
+                   "table", "row", "cell")
 
 
 def repair_mismatched_tags(xml_text):

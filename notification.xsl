@@ -48,6 +48,18 @@ text-align:left;
 text-indent:1em;
 }
 
+/* 表（本文と同じフォントにする） */
+/* Wordは inherit の解釈が不安定なため、明示的に指定する */
+table{
+font-family:"MS Mincho","Hiragino Mincho ProN",serif;
+}
+
+table p{
+font-family:"MS Mincho","Hiragino Mincho ProN",serif;
+margin:0;
+padding:0;
+}
+
 /* 階層ごとのインデント */
 
 .level0 .subtitle{
@@ -182,6 +194,8 @@ text-indent:1em;
 </div>
 </xsl:for-each>
 
+<xsl:apply-templates select="table"/>
+
 <xsl:apply-templates select="section"/>
 
 </div>
@@ -191,6 +205,54 @@ text-indent:1em;
 <!-- 下線 -->
 <xsl:template match="underline">
 <u><xsl:apply-templates/></u>
+</xsl:template>
+
+<!-- ======================================== -->
+<!-- 表                                        -->
+<!--   Wordが書き出す形式に合わせている          -->
+<!--   ・table自体は border:none                -->
+<!--   ・罫線は各tdに指定                       -->
+<!--   ・2列目以降は border-left:none で二重線を防ぐ -->
+<!--   ・幅は列数から自動計算（全体424.65pt）     -->
+<!-- ======================================== -->
+<xsl:template match="table">
+<table class="MsoTableGrid" border="1" cellspacing="0" cellpadding="0"
+ style="border-collapse:collapse;border:none">
+<xsl:apply-templates select="row"/>
+</table>
+<!-- 表の直後に空段落を置く（Wordが表の後に必ず入れる） -->
+<p class="MsoNormal"><xsl:text>&#160;</xsl:text></p>
+</xsl:template>
+
+<xsl:template match="row">
+<tr>
+<xsl:apply-templates select="cell"/>
+</tr>
+</xsl:template>
+
+<xsl:template match="cell">
+  <!-- 同じ行のセル数から列幅を求める -->
+  <xsl:variable name="cols" select="count(../cell)"/>
+  <xsl:variable name="ptw" select="424.65 div $cols"/>
+  <xsl:variable name="pxw" select="round(566 div $cols)"/>
+
+  <td valign="top">
+    <xsl:attribute name="width"><xsl:value-of select="$pxw"/></xsl:attribute>
+    <xsl:attribute name="style">
+      <xsl:text>width:</xsl:text>
+      <xsl:value-of select="format-number($ptw, '0.00')"/>
+      <xsl:text>pt;border:solid windowtext 1.0pt;</xsl:text>
+      <!-- 2列目以降は左罫線を消す（隣のセルの右罫線と重なるため） -->
+      <xsl:if test="position() &gt; 1">
+        <xsl:text>border-left:none;</xsl:text>
+      </xsl:if>
+      <xsl:text>padding:0cm 5.4pt 0cm 5.4pt</xsl:text>
+    </xsl:attribute>
+
+    <p class="MsoNormal" style="margin-bottom:0cm;line-height:normal">
+      <xsl:apply-templates/>
+    </p>
+  </td>
 </xsl:template>
 
 </xsl:stylesheet>
